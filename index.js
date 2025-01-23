@@ -119,8 +119,12 @@ register("command", (...args) => {
 
 
 register("command", (...args) => {
-    let username = args?.[1];
-    let length = args?.[2];
+    if (!args?.[0]) {
+        ChatLib.chat("/dodge <name> <days?>")
+        return;
+    }
+    let username = args?.[0];
+    let length = args?.[1];
     dodgePlayer(username, length);
 }).setName("dodge");
 
