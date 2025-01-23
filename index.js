@@ -161,8 +161,8 @@ const printAll = () => {
             continue;
         }
         let dodgeStr = "";
-        if (`${data.playerData[UUID]["dodge"]}`) {
-            if (`${data.playerData[UUID]["dodgeLength"]} !== 0`) {
+        if (data.playerData[UUID]["dodge"]) {
+            if (data.playerData[UUID]["dodgeLength"] !== 0) {
                 dodgeStr = ` : (dodged for ${data.playerData[UUID]["dodgeLength"]} days)`;
             } else {
                 dodgeStr = " : (dodged)";
