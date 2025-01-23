@@ -79,6 +79,7 @@ register("command", (...args) => {
             let username = args?.[1];
             let length = args?.[2];
             dodgePlayer(username, length);
+            break;
         case "list":
         case "viewall":
         case "show":
@@ -166,7 +167,11 @@ register("chat", (username) => {
 
 
 const commandHelp = () => {
-  ChatLib.chat("big help")
+    ChatLib.chat("big help")
+    ChatLib.chat("/big get <name> &7<- view stored info about a player");
+    ChatLib.chat("/big dodge <name> <days?> &7<- mark player as dodged. optionally add num of days to dodge the player for");
+    ChatLib.chat("/big list &7<- view all players with notes");
+    ChatLib.chat("/big <name> <note> &7<- add or remove a note about a player");
 }
 
 
