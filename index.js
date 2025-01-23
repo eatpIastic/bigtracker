@@ -262,8 +262,11 @@ const addUUID = (username) => {
 
 
 const playerJoin = (UUID, username, actualParty=true) => {
+    ChatLib.chat(`${username}`);
     if (data.playerData[UUID]["note"] !== "") {
-        ChatLib.chat(`note: ${data.playerData[UUID]["note"]}\n`);
+        ChatLib.chat(`note: ${data.playerData[UUID]["note"]}`);
+    } else {
+        ChatLib.chat("no note");
     }
     
 
@@ -272,6 +275,8 @@ const playerJoin = (UUID, username, actualParty=true) => {
         ChatLib.chat(`last run: ${(((Date.now() - data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
         ChatLib.chat(`runs w/: ${data.playerData[UUID]["numRuns"]}`);
         ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["runTime"] / 60)}m ${data.playerData[UUID]["runTime"] % 60}s`);
+    } else {
+        ChatLib.chat("no runs");
     }
     
     if (data.playerData[UUID]["avgSSTimeN"] !== 0) {
@@ -280,6 +285,15 @@ const playerJoin = (UUID, username, actualParty=true) => {
 
     if (data.playerData[UUID]["pre4RateN"] !== 0) {
         ChatLib.chat(`pre4 rate: ${data.playerData[UUID]["pre4Rate"]}/${data.playerData[UUID]["pre4RateN"]}`);
+    }
+
+    if (!actualParty && data.playerData[UUID]["dodge"]) {
+        if (data.playerData[UUID]["dodgeLength"] !== 0) {
+            ChatLib.chat(`dodged for ${data.playerData[UUID]["dodgeLength"]}`);
+            ChatLib.chat(`${data.playerData[UUID]["dodgeLength"] - (((Date.now() - data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days remaining`);
+        } else {
+            ChatLib.chat("dodged");
+        }
     }
 
 
@@ -305,7 +319,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
         // ChatLib.chat(`${username} is dodged for ${dodgeLength} days`);
         World.playSound("mob.horse.donkey.idle", 1, 1)
         if (data.sayReason) {
-            ChatLib.command(`pc kicking ${username}: ${data.playerData[UUID]["note"]}`);
+            ChatLib.command(`pc kicking ${username}${data.playerData[UUID]["note"] !== "" ? ":" : ""} ${data.playerData[UUID]["note"]}`);
         }
         setTimeout( () => {
             ChatLib.command(`p kick ${username}`);
