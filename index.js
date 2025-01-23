@@ -62,6 +62,10 @@ if (data.firstTime) {
     }
     data.firstTime = false;
     data.save();
+
+    if (World.isLoaded()) {
+        ChatLib.command("big help", true);
+    }
 }
 
 
@@ -111,7 +115,14 @@ register("command", (...args) => {
             modifyNote(args[0], args?.splice(1)?.join(" "));
             break;
     }
-}).setName("big").setAliases(["dodge"]);
+}).setName("big");
+
+
+register("command", (...args) => {
+    let username = args?.[1];
+    let length = args?.[2];
+    dodgePlayer(username, length);
+}).setName("dodge");
 
 
 const modifyNote = (username, dodgenote) => {
@@ -252,18 +263,18 @@ const playerJoin = (UUID, username, actualParty=true) => {
     }
     
 
-    if(data.playerData[UUID]["numRuns"] !== 0) {
+    if (data.playerData[UUID]["numRuns"] !== 0) {
         ChatLib.chat(`avg deaths: ${data.playerData[UUID]["avgDeaths"]}`);
-        ChatLib.chat(`last run: ${(((Date.now()-data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
+        ChatLib.chat(`last run: ${(((Date.now() - data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
         ChatLib.chat(`runs w/: ${data.playerData[UUID]["numRuns"]}`);
         ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["runTime"] / 60)}m ${data.playerData[UUID]["runTime"] % 60}s`);
     }
     
-    if(data.playerData[UUID]["avgSSTimeN"] !== 0) {
+    if (data.playerData[UUID]["avgSSTimeN"] !== 0) {
         ChatLib.chat(`avg ss: ${data.playerData[UUID]["avgSSTime"]}s`);
     }
 
-    if(data.playerData[UUID]["pre4RateN"] !== 0) {
+    if (data.playerData[UUID]["pre4RateN"] !== 0) {
         ChatLib.chat(`pre4 rate: ${data.playerData[UUID]["pre4Rate"]}/${data.playerData[UUID]["pre4RateN"]}`);
     }
 
