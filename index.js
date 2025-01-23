@@ -67,6 +67,9 @@ register("command", (...args) => {
     }
   
     switch (args[0]) {
+        case "help":
+            commandHelp();
+            break;
         case "get":
         case "view":
             if (!args[1] || args[1] === undefined) {
@@ -125,6 +128,9 @@ const modifyNote = (username, dodgenote) => {
 
 const printAll = () => {
     for (let UUID in data.playerData) {
+        if (data.playerData[UUID]["note"] === "") {
+            continue;   
+        } 
         ChatLib.chat(`${data.playerData[UUID]["lastKnown"]}: ${data.playerData[UUID]["note"]}`);
     }
 }
