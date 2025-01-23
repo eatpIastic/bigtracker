@@ -299,6 +299,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
             }
         }
         // ChatLib.chat(`${username} is dodged for ${dodgeLength} days`);
+        World.playSound("mob.horse.donkey.idle", 1, 1)
         if (data.sayReason) {
             ChatLib.command(`pc kicking ${username}: ${data.playerData[UUID]["note"]}`);
         }
