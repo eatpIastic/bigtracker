@@ -2,6 +2,7 @@
 
 import request from '../requestV2';
 import PogObject from "../PogData";
+import Dungeon from "../BloomCore/dungeons/Dungeon";
 
 
 const data = new PogObject("bigtracker", {
@@ -105,6 +106,9 @@ register("command", (...args) => {
             let length = args?.[2];
             dodgePlayer(username, length);
             break;
+        case "sstimes":
+            getSSTimes();
+            break;
         case "list":
         case "viewall":
         case "show":
@@ -116,6 +120,22 @@ register("command", (...args) => {
             break;
     }
 }).setName("big");
+
+const getSSTimes = () => {
+    let sortedSSTimes = [];
+    for (let UUID in data.playerData) {
+        if (data.playerData[UUID]["avgSSTimeN"] === 0) {
+            continue;
+        }
+
+        sortedSSTimes.push([data.playerData[UUID]["lastKnown"], data.playerData[UUID]["avgSSTime"]]);
+    }
+    sortedSSTimes.sort((a,b) => a[1] - b[1]);
+
+    sortedSSTimes.forEach(p => {
+        ChatLib.chat(`${p[0]}: ${p[1]}`);
+    });
+}
 
 
 register("command", (...args) => {
@@ -218,7 +238,7 @@ register("chat", (username) => {
 
 
 const commandHelp = () => {
-    ChatLib.chat("big help")
+    ChatLib.chat("/big help &7<- this");
     ChatLib.chat("/big get <name> &7<- view stored info about a player");
     ChatLib.chat("/big dodge <name> <days?> &7<- mark player as dodged. optionally add num of days to dodge the player for. dodge again to undodge.");
     ChatLib.chat("/big list &7<- view all players with notes");
@@ -226,6 +246,8 @@ const commandHelp = () => {
     ChatLib.chat("/big autokick &7<- autokick dodged players");
     ChatLib.chat("/big sayreason &7<- say note in chat when autokicking someone");
     ChatLib.chat("/big reset &7<- reset all players");
+    ChatLib.chat("/big sstimes &7<- print all players average ss times from fastest to slowest");
+    ChatLib.chat("/dodge <name> <days?>&7<- shortcut for /big dodge");
 }
 
 
@@ -274,7 +296,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
         ChatLib.chat(`avg deaths: ${data.playerData[UUID]["avgDeaths"]}`);
         ChatLib.chat(`last run: ${(((Date.now() - data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
         ChatLib.chat(`runs w/: ${data.playerData[UUID]["numRuns"]}`);
-        ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["runTime"] / 60)}m ${data.playerData[UUID]["runTime"] % 60}s`);
+        ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["avgRunTime"] / 60)}m ${data.playerData[UUID]["avgRunTime"] % 60}s`);
     } else {
         ChatLib.chat("no runs");
     }
@@ -295,7 +317,6 @@ const playerJoin = (UUID, username, actualParty=true) => {
             ChatLib.chat("dodged");
         }
     }
-
 
 
     if (username.toLowerCase() != data.playerData[UUID]["lastKnown"].toLowerCase()) {
@@ -345,11 +366,11 @@ register("chat", () => {
 register("chat", (username) => {
     const completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
     if (completedIn > 20) {
-        if (!ssDone) {
+        if (!ssDone && tempPartyMembers[username] === "Healer") {
             ssDone = true;
             updateSSMovingAvg(username, 20);
         }
-        if (!pre4Done) {
+        if (!pre4Done && tempPartyMembers[username] === "Berserk") {
             pre4Done = true;
             updatePre4Rate(username, false);
         }
@@ -439,7 +460,13 @@ register("chat", (minutes, seconds) => {
 }).setCriteria(/\s+☠ Defeated Maxor, Storm, Goldor, and Necron in (\d+)m\s+(\d+)s/);
 
 register("chat", (msg) => {
-    if (msg.includes("reconnected") || msg.includes("disconnected")) return;
+    if (!Dungeon.inDungeon) {
+        return;
+    }
+    if (msg.includes("reconnected.") || msg.includes(" disconnected ")) {
+        return;
+    }
+
     let username = msg.split(" ")[2];
     if (!namesToUUID[username]) {
         addUUID(username);
