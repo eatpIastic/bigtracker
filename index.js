@@ -70,6 +70,16 @@ register("command", (...args) => {
         case "help":
             commandHelp();
             break;
+        case "autokick":
+            data.autoKick = !data.autoKick;
+            data.save();
+            ChatLib.chat(`autokick ${data.autoKick ? "enabled" : "disabled"}`);
+            break;
+        case "sayReason":
+            data.sayReason = !data.sayReason;
+            data.save();
+            ChatLib.chat(`say reason ${data.sayReason ? "enabled" : "disabled"}`);
+            break;
         case "get":
         case "view":
             if (!args[1] || args[1] === undefined) {
