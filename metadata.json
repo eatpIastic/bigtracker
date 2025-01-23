@@ -4,5 +4,5 @@
   "version": "0.0.1",
   "entry": "index.js",
   "description": "m7 player tracker / dodgelist",
-  "requires": ["PogData", "requestV2"]
+  "requires": ["PogData", "requestV2", "BloomCore"]
 }
