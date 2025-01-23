@@ -200,6 +200,8 @@ const commandHelp = () => {
     ChatLib.chat("/big dodge <name> <days?> &7<- mark player as dodged. optionally add num of days to dodge the player for. dodge again to undodge.");
     ChatLib.chat("/big list &7<- view all players with notes");
     ChatLib.chat("/big <name> <note> &7<- add or remove a note about a player");
+    ChatLib.chat("/big autokick &7<- autokick dodged players");
+    ChatLib.chat("/big sayreason &7<- say note in chat when autokicking someone");
 }
 
 
@@ -265,7 +267,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
     }
 
 
-    if (actualParty && autoKick && data.playerData[UUID]["dodge"]) {
+    if (actualParty && data.autoKick && data.playerData[UUID]["dodge"]) {
         if(data.playerData[UUID]["dodgeLength"] !== 0) {
             if(((Date.now() - data.playerData[UUID]["dodgeDate"]) / 1000) / 60 / 60 / 24 >= data.playerData[UUID]["dodgeLength"]) {
                 data.playerData[UUID]["dodgeLength"] = 0;
