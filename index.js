@@ -99,7 +99,8 @@ const modifyNote = (username, dodgenote) => {
         const UUID = JSON.parse(res).id;
         namesToUUID[username] = UUID;
 
-        if (!data.playerData[username]) {
+        if (!data.playerData[UUID]) {
+            ChatLib.chat(`${username}: ${dodgenote}`);
             createNewPlayer(UUID, username, dodgenote);
             return;
         }
@@ -111,6 +112,9 @@ const modifyNote = (username, dodgenote) => {
                 data.save();
                 return;
             }
+        } else {
+            data.playerData[UUID]["note"] = dodgenote;
+            ChatLib.chat(`${username}: ${dodgenote}`);
         }
 
         data.playerData[UUID]["note"] = dodgenote;
