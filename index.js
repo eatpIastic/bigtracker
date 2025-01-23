@@ -268,8 +268,8 @@ const playerJoin = (UUID, username, actualParty=true) => {
 
 
     if (actualParty && data.autoKick && data.playerData[UUID]["dodge"]) {
-        if(data.playerData[UUID]["dodgeLength"] !== 0) {
-            if(((Date.now() - data.playerData[UUID]["dodgeDate"]) / 1000) / 60 / 60 / 24 >= data.playerData[UUID]["dodgeLength"]) {
+        if (data.playerData[UUID]["dodgeLength"] !== 0) {
+            if (((Date.now() - data.playerData[UUID]["dodgeDate"]) / 1000) / 60 / 60 / 24 >= data.playerData[UUID]["dodgeLength"]) {
                 data.playerData[UUID]["dodgeLength"] = 0;
                 data.playerData[UUID]["dodgeDate"] = 0;
                 data.playerData[UUID]["dodge"] = false;
