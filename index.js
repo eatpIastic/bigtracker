@@ -248,7 +248,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
                 return;
             }
         }
-        // ChatLib.chat(`${username} is dodged for ${dodgeLength}D`);
+        // ChatLib.chat(`${username} is dodged for ${dodgeLength} days`);
         if (data.sayReason) {
             ChatLib.command(`pc kicking ${username}: ${data.playerData[UUID]["note"]}`);
         }
@@ -313,9 +313,6 @@ const updatePre4Rate = (username, success) => {
     data.save();
 }
 
-register("command", (...args) => {
-    updateSSMovingAvg("eatplastic", parseInt(args[0]));
-}).setName("testssavg");
 
 // data.playerData[namesToUUID[username]]
 const updateSSMovingAvg = (username, time) => {
