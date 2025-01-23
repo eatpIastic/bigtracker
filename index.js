@@ -13,6 +13,11 @@ const data = new PogObject("bigtracker", {
 
 const namesToUUID = {};
 
+const resetData = () => {
+    data.playerData = {};
+    data.save();
+    ChatLib.chat("player data reset");
+}
 
 const importListData = () => {
     try {
@@ -69,6 +74,9 @@ register("command", (...args) => {
     switch (args[0]) {
         case "help":
             commandHelp();
+            break;
+        case "reset":
+            resetData();
             break;
         case "autokick":
             data.autoKick = !data.autoKick;
@@ -140,11 +148,11 @@ const printAll = () => {
     for (let UUID in data.playerData) {
         if (data.playerData[UUID]["note"] === "" && !data.playerData[UUID]["dodge"]) {
             continue;
-        } 
+        }
         let dodgeStr = "";
         if (`${data.playerData[UUID]["dodge"]}`) {
             if (`${data.playerData[UUID]["dodgeLength"]} !== 0`) {
-                dodgeStr = ` : (dodged for ${(((Date.now()-data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)}} days)`;
+                dodgeStr = ` : (dodged for ${data.playerData[UUID]["dodgeLength"]} days)`;
             } else {
                 dodgeStr = " : (dodged)";
             }
@@ -202,6 +210,7 @@ const commandHelp = () => {
     ChatLib.chat("/big <name> <note> &7<- add or remove a note about a player");
     ChatLib.chat("/big autokick &7<- autokick dodged players");
     ChatLib.chat("/big sayreason &7<- say note in chat when autokicking someone");
+    ChatLib.chat("/big reset &7<- reset all players");
 }
 
 
