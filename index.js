@@ -172,7 +172,7 @@ const commandHelp = () => {
 
 const checkPlayer = (username, actualParty=true) => {
     if (namesToUUID[username]) {
-        playerJoin(namesToUUID[username], actualParty);
+        playerJoin(namesToUUID[username], username, actualParty);
         return;
     }
 
@@ -185,7 +185,7 @@ const checkPlayer = (username, actualParty=true) => {
             return;
         }
 
-        playerJoin(UUID, actualParty);
+        playerJoin(UUID, username, actualParty);
     });
 }
 
@@ -350,7 +350,6 @@ const getPartyMembers = () => {
 
 register("chat", (minutes, seconds) => {
     const runTime = (parseInt(minutes) * 60) + parseInt(seconds);
-    runTimes.push(runTime);
     const partyMembers = getPartyMembers();
     for (let username in partyMembers) {
         if (!namesToUUID[username]) {
