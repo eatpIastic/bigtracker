@@ -211,7 +211,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
     if(data.playerData[UUID]["numRuns"] !== 0) {
         ChatLib.chat(`avg deaths: ${data.playerData[UUID]["avgDeaths"]}`);
         ChatLib.chat(`last run: ${(((Date.now()-data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
-        ChatLib.chat(`runs w/: ${data.playerData[UUID][numRuns]}`);
+        ChatLib.chat(`runs w/: ${data.playerData[UUID]["numRuns"]}`);
         ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["runTime"] / 60)}m ${data.playerData[UUID]["runTime"] % 60}s`);
     }
     
