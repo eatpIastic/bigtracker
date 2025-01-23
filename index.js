@@ -128,10 +128,18 @@ const modifyNote = (username, dodgenote) => {
 
 const printAll = () => {
     for (let UUID in data.playerData) {
-        if (data.playerData[UUID]["note"] === "") {
-            continue;   
+        if (data.playerData[UUID]["note"] === "" && !data.playerData[UUID]["dodge"]) {
+            continue;
         } 
-        ChatLib.chat(`${data.playerData[UUID]["lastKnown"]}: ${data.playerData[UUID]["note"]}`);
+        let dodgeStr = "";
+        if (`${data.playerData[UUID]["dodge"]}`) {
+            if (`${data.playerData[UUID]["dodgeLength"]} !== 0`) {
+                dodgeStr = ` : (dodged for ${(((Date.now()-data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)}} days)`;
+            } else {
+                dodgeStr = " : (dodged)";
+            }
+        }
+        ChatLib.chat(`${data.playerData[UUID]["lastKnown"]}: ${data.playerData[UUID]["note"]}${dodgeStr}`);
     }
 }
 
