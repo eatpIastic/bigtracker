@@ -75,7 +75,7 @@ register("command", (...args) => {
             data.save();
             ChatLib.chat(`autokick ${data.autoKick ? "enabled" : "disabled"}`);
             break;
-        case "sayReason":
+        case "sayreason":
             data.sayReason = !data.sayReason;
             data.save();
             ChatLib.chat(`say reason ${data.sayReason ? "enabled" : "disabled"}`);
