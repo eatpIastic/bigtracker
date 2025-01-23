@@ -14,11 +14,13 @@ const data = new PogObject("bigtracker", {
 
 const namesToUUID = {};
 
+
 const resetData = () => {
     data.playerData = {};
     data.save();
     ChatLib.chat("player data reset");
 }
+
 
 const importListData = () => {
     try {
@@ -120,6 +122,7 @@ register("command", (...args) => {
             break;
     }
 }).setName("big");
+
 
 const getSSTimes = () => {
     let sortedSSTimes = [];
@@ -270,6 +273,7 @@ const checkPlayer = (username, actualParty=true) => {
     });
 }
 
+
 const addUUID = (username) => {
     request(`https://api.mojang.com/users/profiles/minecraft/${username}`)
     .then(function(res) {
@@ -419,6 +423,7 @@ const updateSSMovingAvg = (username, time) => {
     data.save();
 }
 
+
 const getPartyMembers = () => {
     const Scoreboard = TabList.getNames();
     let numMembers = parseInt(Scoreboard[0].charAt(28));
@@ -440,6 +445,7 @@ const getPartyMembers = () => {
     return partyMembers;
 }
 
+
 register("chat", (minutes, seconds) => {
     const runTime = (parseInt(minutes) * 60) + parseInt(seconds);
     const partyMembers = getPartyMembers();
@@ -458,6 +464,7 @@ register("chat", (minutes, seconds) => {
         data.save();
     }
 }).setCriteria(/\s+☠ Defeated Maxor, Storm, Goldor, and Necron in (\d+)m\s+(\d+)s/);
+
 
 register("chat", (msg) => {
     if (!Dungeon.inDungeon) {
