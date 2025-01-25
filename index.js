@@ -97,6 +97,8 @@ register("command", (...args) => {
             break;
         case "get":
         case "view":
+        case "check":
+        case "see":
             if (!args[1] || args[1] === undefined) {
                 ChatLib.chat(`/big ${args[0]} username`);
                 return;
@@ -300,7 +302,7 @@ const playerJoin = (UUID, username, actualParty=true) => {
         ChatLib.chat(`avg deaths: ${data.playerData[UUID]["avgDeaths"]}`);
         ChatLib.chat(`last run: ${(((Date.now() - data.playerData[UUID]["lastSession"]) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
         ChatLib.chat(`runs w/: ${data.playerData[UUID]["numRuns"]}`);
-        ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["avgRunTime"] / 60)}m ${data.playerData[UUID]["avgRunTime"] % 60}s`);
+        ChatLib.chat(`avg runtime: ${Math.trunc(data.playerData[UUID]["avgRunTime"] / 60)}m ${(data.playerData[UUID]["avgRunTime"] % 60).toFixed(1)}s`);
     } else {
         ChatLib.chat("no runs");
     }
@@ -466,7 +468,7 @@ register("chat", (minutes, seconds) => {
         let newAvg = avg * (n-1) / n + (runTime / n);
         data.playerData[namesToUUID[username]]["numRuns"] += 1;
         data.playerData[namesToUUID[username]]["avgRunTime"] = newAvg;
-        data.lastSession = Date.now();
+        data.playerData[namesToUUID[username]]["lastSession"] = Date.now();
         data.save();
     }
 }).setCriteria(/\s+☠ Defeated Maxor, Storm, Goldor, and Necron in (\d+)m\s+(\d+)s/);
@@ -488,7 +490,7 @@ register("chat", (msg) => {
     }
     let n = data.playerData[namesToUUID[username]]["numRuns"];
     let avg = data.playerData[namesToUUID[username]]["avgDeaths"];
-    let newAvg = (avg * (n-1) / n + (time / n)).toFixed(2);
+    let newAvg = (avg * (n-1) / n + (avg / n)).toFixed(2);
     data.playerData[namesToUUID[username]]["avgDeaths"] = parseFloat(newAvg);
     data.save();
 }).setCriteria(/☠(.+)/);
