@@ -410,6 +410,7 @@ const updatePre4Rate = (username, success) => {
 
 // data.playerData[namesToUUID[username]]
 const updateSSMovingAvg = (username, time) => {
+    console.log(`${username}: ${time}`);
     if (!namesToUUID[username]) {
         addUUID(username);
         console.log(`failed to update avg ss of ${username}`);
