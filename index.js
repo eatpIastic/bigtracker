@@ -369,10 +369,10 @@ register("chat", () => {
 
 register("chat", (username) => {
     const completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
-    if (completedIn > 20) {
+    if (completedIn > 17) {
         if (!ssDone && tempPartyMembers[username] === "Healer") {
             ssDone = true;
-            updateSSMovingAvg(username, 20);
+            updateSSMovingAvg(username, 17);
         }
         if (!pre4Done && tempPartyMembers[username] === "Berserk") {
             pre4Done = true;
@@ -427,18 +427,22 @@ const updateSSMovingAvg = (username, time) => {
 const getPartyMembers = () => {
     const Scoreboard = TabList.getNames();
     let numMembers = parseInt(Scoreboard[0].charAt(28));
+    // console.log(`numMembers ${numMembers}`)
     const partyMembers = {};
     for (let i = 1; i < Scoreboard.length; i++) {
         if (Object.keys(partyMembers).length === numMembers || Scoreboard[i].includes("Player Stats")) {
             break;
         }
-        if (Scoreboard[i].includes("(")) {
+        // console.log(`Scoreboard[i]: ${Scoreboard[i]}`)
+        if (Scoreboard[i].includes("[")) {
             let line = Scoreboard[i].removeFormatting();
-            const name = line.split(" ")?.[1];
+            // console.log(`line: ${line}`)
+            let name = line.split(" ")?.[1];
+            // console.log(name);
             if (!namesToUUID[name]) {
                 addUUID(name);
             }
-            const playerClass = line.substring((line.indexOf("(")) + 1, line.length-1).split(" ")?.[0];
+            let playerClass = line.substring((line.indexOf("(")) + 1, line.length-1).split(" ")?.[0];
             partyMembers[name] = playerClass;
         }
     }
@@ -450,6 +454,7 @@ register("chat", (minutes, seconds) => {
     const runTime = (parseInt(minutes) * 60) + parseInt(seconds);
     const partyMembers = getPartyMembers();
     for (let username in partyMembers) {
+        console.log(username);
         if (!namesToUUID[username]) {
             addUUID(username);
             console.log(`failed to update avg runtime for ${username}`);
