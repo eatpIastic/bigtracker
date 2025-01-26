@@ -458,11 +458,16 @@ const updateSSMovingAvg = (username, time) => {
 
 
 const getPartyMembers = () => {
+    if (!Dungeon.inDungeon) return {};
     if (allPartyMembers) {
         return tempPartyMembers;
     }
-    const Scoreboard = TabList.getNames();
-    let numMembers = parseInt(Scoreboard[0].charAt(28));
+    const Scoreboard = TabList?.getNames();
+    if (!Scoreboard || Scoreboard?.length === 0) {
+        return {};
+    }
+    
+    let numMembers = parseInt(Scoreboard[0]?.charAt(28));
     let deadPlayer = false;
     const partyMembers = {};
     for (let i = 1; i < Scoreboard.length; i++) {
@@ -492,6 +497,7 @@ const getPartyMembers = () => {
     } else {
         allPartyMembers = true;
     }
+    tempPartyMembers = partyMembers;
     return partyMembers;
 }
 
@@ -542,6 +548,7 @@ register("chat", (msg) => {
 onChatPacket(() => {
     runStart = Date.now();
     tempPartyMembers = getPartyMembers();
+    setTimeout( () => getPartyMembers(), 3000);
 }).setCriteria(/\[NPC\] Mort: Here, I found this map when I first entered the dungeon/);
 
 onChatPacket(() => {
@@ -572,6 +579,8 @@ const updateMovingBR = (name, time) => {
     let n = data.playerData[namesToUUID[name]]["avgBRN"] + 1;
     let avg = data.playerData[namesToUUID[name]]["avgBR"];
     let newAvg = (avg * (n-1) / n + (time / n)).toFixed(2);
+
+    console.log(`(br) ${name}: ${time} : ${newAvg}`);
 
     data.playerData[namesToUUID[name]]["avgBR"] = parseFloat(newAvg);
     data.playerData[namesToUUID[name]]["avgBRN"] += 1;
@@ -605,6 +614,8 @@ const updateMovingCampAvg = (name, time) => {
     let n = data.playerData[namesToUUID[name]]["avgCampN"] + 1;
     let avg = data.playerData[namesToUUID[name]]["avgCamp"];
     let newAvg = (avg * (n-1) / n + (time / n)).toFixed(2);
+
+    console.log(`(camp) ${name}: ${time} : ${newAvg}`);
 
     data.playerData[namesToUUID[name]]["avgCamp"] = parseFloat(newAvg);
     data.playerData[namesToUUID[name]]["avgCampN"] += 1;
