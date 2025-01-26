@@ -4,6 +4,8 @@ import request from '../requestV2';
 import PogObject from "../PogData";
 import Dungeon from "../BloomCore/dungeons/Dungeon";
 
+import { onChatPacket } from "../BloomCore/utils/Events";
+
 
 const data = new PogObject("bigtracker", {
   playerData: {},
@@ -52,7 +54,11 @@ const createNewPlayer = (UUID, username, note="", dodge=false, dodgeLength=0, do
         pre4RateN: 0,
         ee3Rate: 0,
         ee3RateN: 0,
-        avgRunTime: 0
+        avgRunTime: 0,
+        avgBR: 0,
+        avgBRN: 0,
+        avgCamp: 0,
+        avgCampN: 0
     }
     data.save();
 }
@@ -315,6 +321,14 @@ const playerJoin = (UUID, username, actualParty=true) => {
         ChatLib.chat(`pre4 rate: ${data.playerData[UUID]["pre4Rate"]}/${data.playerData[UUID]["pre4RateN"]}`);
     }
 
+    if (data.playerData[UUID]["avgBRN"] !== 0) {
+        ChatLib.chat(`avg br: ${data.playerData[UUID]["avgBR"]}`);
+    }
+
+    if (data.playerData[UUID]["avgCampN"] !== 0) {
+        ChatLib.chat(`avg camp: ${data.playerData[UUID]["avgCamp"]}`);
+    }
+
     if (!actualParty && data.playerData[UUID]["dodge"]) {
         if (data.playerData[UUID]["dodgeLength"] !== 0) {
             ChatLib.chat(`dodged for ${data.playerData[UUID]["dodgeLength"]}`);
@@ -358,16 +372,31 @@ const playerJoin = (UUID, username, actualParty=true) => {
 // §r         §r§b§lParty §r§f(1)§r
 // §r§8[§r§6406§r§8] §r§beatplastic §r§f(§r§dBerserk L§r§f)§r
 let tempPartyMembers = {};
+let allPartyMembers = false;
 let termsStart = 0;
 let ssDone = false;
 let pre4Done = false;
+let runStart = 0;
+let campStart = 0;
 
-register("chat", () => {
+register("worldLoad", () => {
+    allPartyMembers = false;
     tempPartyMembers = getPartyMembers();
     termsStart = Date.now();
     ssDone = false;
     pre4Done = false;
-}).setCriteria("[BOSS] Goldor: Who dares trespass into my domain?");
+    runStart = 0;
+    campStart = 0;
+})
+
+onChatPacket(() => {
+    allPartyMembers = false;
+    tempPartyMembers = getPartyMembers();
+    termsStart = Date.now();
+    ssDone = false;
+    pre4Done = false;
+}).setCriteria(/\[BOSS\] Goldor: Who dares trespass into my domain\?/);
+
 
 register("chat", (username) => {
     const completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
@@ -412,7 +441,8 @@ const updatePre4Rate = (username, success) => {
 
 // data.playerData[namesToUUID[username]]
 const updateSSMovingAvg = (username, time) => {
-    console.log(`${username}: ${time}`);
+    // console.log(`${username}: ${time}`);
+
     if (!namesToUUID[username]) {
         addUUID(username);
         console.log(`failed to update avg ss of ${username}`);
@@ -428,26 +458,39 @@ const updateSSMovingAvg = (username, time) => {
 
 
 const getPartyMembers = () => {
+    if (allPartyMembers) {
+        return tempPartyMembers;
+    }
     const Scoreboard = TabList.getNames();
     let numMembers = parseInt(Scoreboard[0].charAt(28));
-    // console.log(`numMembers ${numMembers}`)
+    let deadPlayer = false;
     const partyMembers = {};
     for (let i = 1; i < Scoreboard.length; i++) {
         if (Object.keys(partyMembers).length === numMembers || Scoreboard[i].includes("Player Stats")) {
             break;
         }
-        // console.log(`Scoreboard[i]: ${Scoreboard[i]}`)
+
         if (Scoreboard[i].includes("[")) {
             let line = Scoreboard[i].removeFormatting();
-            // console.log(`line: ${line}`)
+            if(line?.includes("(DEAD)")) {
+                deadPlayer = true;
+            }
+
             let name = line.split(" ")?.[1];
-            // console.log(name);
+
             if (!namesToUUID[name]) {
                 addUUID(name);
             }
+            
             let playerClass = line.substring((line.indexOf("(")) + 1, line.length-1).split(" ")?.[0];
             partyMembers[name] = playerClass;
         }
+    }
+
+    if (deadPlayer) {
+        allPartyMembers = false;
+    } else {
+        allPartyMembers = true;
     }
     return partyMembers;
 }
@@ -494,3 +537,76 @@ register("chat", (msg) => {
     data.playerData[namesToUUID[username]]["avgDeaths"] = parseFloat(newAvg);
     data.save();
 }).setCriteria(/☠(.+)/);
+
+
+onChatPacket(() => {
+    runStart = Date.now();
+    tempPartyMembers = getPartyMembers();
+}).setCriteria(/\[NPC\] Mort: Here, I found this map when I first entered the dungeon/);
+
+onChatPacket(() => {
+    const rightNow = Date.now();
+    campStart = rightNow;
+    let bloodrushTime = parseFloat(((rightNow - runStart) / 1000).toFixed(2));
+
+    for (let name in Object.keys(tempPartyMembers)) {
+        if(tempPartyMembers[name] == "Mage" || tempPartyMembers[name] == "Archer") {
+            updateMovingBR(name, bloodrushTime);
+        }
+    }
+}).setCriteria(/The BLOOD DOOR has been opened!/);
+
+const updateMovingBR = (name, time) => {
+    if (!namesToUUID[name]) {
+        addUUID(name);
+        console.log(`failed to update moving br avg of ${name}`);
+        return;
+    }
+
+    if (!data.playerData[namesToUUID[name]]["avgBRN"]) {
+        data.playerData[namesToUUID[name]]["avgBRN"] = 0;
+        data.playerData[namesToUUID[name]]["avgBR"] = 0;
+        data.save();
+    }
+
+    let n = data.playerData[namesToUUID[name]]["avgBRN"] + 1;
+    let avg = data.playerData[namesToUUID[name]]["avgBR"];
+    let newAvg = (avg * (n-1) / n + (time / n)).toFixed(2);
+
+    data.playerData[namesToUUID[name]]["avgBR"] = parseFloat(newAvg);
+    data.playerData[namesToUUID[name]]["avgBRN"] += 1;
+    data.save();
+}
+
+onChatPacket(() => {
+    const rightNow = Date.now();
+    let campTime = parseFloat(((rightNow - campStart) / 1000).toFixed(2));
+
+    for (let name in Object.keys(tempPartyMembers)) {
+        if(tempPartyMembers[name] == "Mage") {
+            updateMovingCampAvg(name, campTime);
+        }
+    }
+}).setCriteria(/\[BOSS\] The Watcher: You have proven yourself\. You may pass\./)
+
+const updateMovingCampAvg = (name, time) => {
+    if (!namesToUUID[name]) {
+        addUUID(name);
+        console.log(`failed to update moving camp avg of ${name}`);
+        return;
+    }
+
+    if (!data.playerData[namesToUUID[name]]["avgCampN"]) {
+        data.playerData[namesToUUID[name]]["avgCampN"] = 0;
+        data.playerData[namesToUUID[name]]["avgCamp"] = 0;
+        data.save();
+    }
+
+    let n = data.playerData[namesToUUID[name]]["avgCampN"] + 1;
+    let avg = data.playerData[namesToUUID[name]]["avgCamp"];
+    let newAvg = (avg * (n-1) / n + (time / n)).toFixed(2);
+
+    data.playerData[namesToUUID[name]]["avgCamp"] = parseFloat(newAvg);
+    data.playerData[namesToUUID[name]]["avgCampN"] += 1;
+    data.save();
+}
