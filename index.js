@@ -385,7 +385,7 @@ register("command", (...args) => {
             break;
         }
     }
-}).setName("big2");
+}).setName("big");
 
 
 const printAll = () => {
