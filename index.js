@@ -127,7 +127,7 @@ const getPartyMembers = () => {
 
         if (Scoreboard[i].includes("[")) {
             let line = Scoreboard[i].removeFormatting();
-            if(line?.includes("(DEAD)")) {
+            if(line?.includes("(DEAD)") || line?.includes("(EMPTY)")) {
                 deadPlayer = true;
             }
 
@@ -137,7 +137,16 @@ const getPartyMembers = () => {
                 getPlayerDataByName(name);
             }
             
-            let playerClass = line.substring((line.indexOf("(")) + 1, line.length-1).split(" ")?.[0];
+            let playerClass = "";
+            // console.log(line);
+
+            if (line.includes("(Healer")) playerClass = "Healer"
+            if (line.includes("(Archer")) playerClass = "Archer"
+            if (line.includes("(Mage")) playerClass = "Mage"
+            if (line.includes("(Tank")) playerClass = "Tank"
+            if (line.includes("(Berserk")) playerClass = "Berserk"
+
+
             tempPartyMembers[name] = playerClass;
         }
     }
@@ -272,17 +281,20 @@ register("packetReceived", (packet, event) => {
     }
     else if (text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/)) {
         let completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
+        console.log(`completedin> ${completedIn}`);
         const match = text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/);
         const name = match[1].toLowerCase();
         let player = getPlayerDataByName(name);
-
+        console.log(`${name} >> ${partyMembers[name]} << ${completedIn}`)
         if (completedIn > 17) {
             completedIn = 17;
         }
 
         if (!ssDone && partyMembers[name] == "Healer") {
             if (completedIn != 17) ChatLib.chat(`SS Completed in ${completedIn}`);
+            console.log(`ssDone Detected and SS Completed in ${completedIn}`);
             ssDone = true;
+            console.log(`updating AVGSSTIME completedIn: ${completedIn}`);
             if (!player) {
                 executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGSSTIME", "AVGSSTIMEN", completedIn]);
             } else {
@@ -495,17 +507,18 @@ const commandHelp = () => {
 
 // const getSSTimes = () => {
 //     let sortedSSTimes = [];
-//     for (let UUID in data.playerData) {
-//         if (data.playerData[UUID]["avgSSTimeN"] === 0) {
-//             continue;
-//         }
+//     let fileNames = new File("./config/ChatTriggers/modules/bigtracker/players").list();
+//     // for (let UUID in data.playerData) {
+//     //     if (data.playerData[UUID]["avgSSTimeN"] === 0) {
+//     //         continue;
+//     //     }
 
-//         sortedSSTimes.push([data.playerData[UUID]["lastKnown"], data.playerData[UUID]["avgSSTime"]]);
-//     }
-//     sortedSSTimes.sort((a,b) => a[1] - b[1]);
+//     //     sortedSSTimes.push([data.playerData[UUID]["lastKnown"], data.playerData[UUID]["avgSSTime"]]);
+//     // }
+//     // sortedSSTimes.sort((a,b) => a[1] - b[1]);
 
-//     sortedSSTimes.forEach(p => {
-//         ChatLib.chat(`${p[0]}: ${p[1]}`);
-//     });
+//     // sortedSSTimes.forEach(p => {
+//     //     ChatLib.chat(`${p[0]}: ${p[1]}`);
+//     // });
 // }
 
