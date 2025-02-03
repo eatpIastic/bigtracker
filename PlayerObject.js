@@ -66,6 +66,7 @@ export default class PlayerObject {
             ChatLib.chat(`avg deaths: ${(this.playerData.DEATHS / this.playerData.NUMRUNS).toFixed(1)}`);
             ChatLib.chat(`last run: ${(((Date.now() - this.playerData.LASTSESSION) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
             ChatLib.chat(`avg runtime: ${Math.trunc(this.playerData.AVGRUNTIME / 60)}m ${(this.playerData.AVGRUNTIME % 60).toFixed(1)}s`);
+            ChatLib.chat(`PBs: SS: ${this.playerData.SSPB} / RUN: ${this.playerData.RUNPB} / CAMP: ${this.playerData.CAMPPB} / TERMS: ${this.playerData.TERMSPB}`);
         } else {
             ChatLib.chat("no runs");
         }
@@ -101,6 +102,37 @@ export default class PlayerObject {
             this.playerData[TYPEN] -= 1;
             this.save();
         }
+
+        switch (TYPE) {
+            case "AVGSSTIME": {
+                if (TIME < this.playerData.SSPB) {
+                    this.playerData.SSPB = TIME;
+                    this.save();
+                }
+                break;
+            }
+            case "AVGRUNTIME": {
+                if (TIME < this.playerData.RUNPB) {
+                    this.playerData.RUNPB = TIME;
+                    this.save();
+                }
+                break;
+            }
+            case "AVGCAMP": {
+                if (TIME < this.playerData.CAMPPB) {
+                    this.playerData.CAMPPB = TIME;
+                    this.save();
+                }
+                break;
+            }
+            case "AVGTERMS": {
+                if (TIME < this.playerData.TERMSPB) {
+                    this.playerData.TERMSPB = TIME;
+                    this.save();
+                }
+                break;
+            }
+        }
     }
 
     dodge(length) {
@@ -120,6 +152,7 @@ export default class PlayerObject {
     }
 
     check(autokick=false, sayReason=false) {
+        this.printPlayer();
         if(this.playerData.DODGE) {
             World.playSound("mob.horse.donkey.idle", 1, 1)
             let dodgeStr = "";
