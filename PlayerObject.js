@@ -95,6 +95,7 @@ export default class PlayerObject {
     updateMovingAVG(TYPE, TYPEN, TIME, INCREMENT=true) {
         this.playerData[TYPEN] += 1;
         let newAvg = (this.playerData[TYPE] * (this.playerData[TYPEN] - 1) / this.playerData[TYPEN] + (TIME / this.playerData[TYPEN])).toFixed(2);
+        console.log(`${TYPE}: ${TIME}`);
         this.playerData[TYPE] = parseFloat(newAvg);
         this.save();
 
