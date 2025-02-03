@@ -279,7 +279,7 @@ register("packetReceived", (packet, event) => {
             completedIn = 17;
         }
 
-        if (!ssDone && tempPartyMembers[name] === "Healer") {
+        if (!ssDone && partyMembers[name] === "Healer") {
             if (completedIn != 17) ChatLib.chat(`SS Completed in ${completedIn}`);
             ssDone = true;
             if (!player) {
@@ -289,7 +289,7 @@ register("packetReceived", (packet, event) => {
             }
         }
 
-        if (!pre4Done && tempPartyMembers[name] === "Berserk") {
+        if (!pre4Done && partyMembers[name] === "Berserk") {
             if (completedIn != 17) ChatLib.chat(`Pre4 Completed in ${completedIn}`);
             pre4Done = true;
             if (!player) {
