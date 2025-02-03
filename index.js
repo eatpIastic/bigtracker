@@ -171,18 +171,91 @@ register("packetReceived", (packet, event) => {
         player.save();
     }
     else if (text.startsWith("[BOSS] The Watcher:")) {
-        // campstart, br, camp done
+        if (campStart === 0) {
+            campStart = Date.now();
+            let brTime = Date.now() - runStart;
+            brTime /= 1000;
+
+            if (brTime > 45) {
+                brTime = 45;
+            }
+
+            brTime = parseFloat( brTime.toFixed(2) );
+            getPartyMembers();
+
+            for (let name of Object.keys(partyMembers)) {
+                if (partyMembers[name] !== "Archer" && partyMembers[name] !== "Mage") {
+                    continue;
+                }
+                let player = getPlayerDataByName(name);
+                player.updateMovingAVG("AVGBR", "AVGBRN", brTime);
+            }
+        }
+
+        if (text === "[BOSS] The Watcher: You have proven yourself. You may pass.") {
+            let campTime = Date.now() - campStart;
+            campTime /= 1000;
+
+            if (campTime > 85) {
+                campTime = 85;
+            }
+
+            campTime = parseFloat( campTime.toFixed(2) );
+
+            getPartyMembers();
+            for (let name of Object.keys(partyMembers)) {
+                if (partyMembers[name] !== "Mage") {
+                    continue;
+                }
+                let player = getPlayerDataByName(name);
+                player.updateMovingAVG("AVGCAMP", "AVGCAMPN", campTime);
+            }
+        }
     }
     else if (text === "The Core entrance is opening!") {
         getPartyMembers();
-        
+        let termsTime = Date.now() - termsStart;
+        termsTime /= 1000;
+        termsTime = parseFloat( termsTime.toFixed(2) );
+
+        if (termsTime > 70) {
+            termsTime = 70;
+        }
+
+        for (let name of Object.keys(partyMembers)) {
+            let player = getPlayerDataByName(name);
+            player.updateMovingAVG("AVGTERMS", "AVGTERMSN", termsTime);
+        }
     }
     else if (text === "[NPC] Mort: Here, I found this map when I first entered the dungeon") {
-        getPartyMembers();
         runStart = Date.now();
+        getPartyMembers();
     }
     else if (text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/)) {
+        const completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
+        const match = text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/);
+        const name = match[1];
+        let player = getPlayerDataByName(name);
 
+        if (completedIn > 17) {
+            completedIn = 17;
+        }
+
+        if (!ssDone && tempPartyMembers[username] === "Healer") {
+            if (completedIn != 17) ChatLib.chat(`SS Completed in ${completedIn}`);
+            ssDone = true;
+            player.updateMovingAVG("AVGSS", "AVGSSN", completedIn);
+        }
+
+        if (!pre4Done && tempPartyMembers[username] === "Berserk") {
+            if (completedIn != 17) ChatLib.chat(`Pre4 Completed in ${completedIn}`);
+            pre4Done = true;
+            player.playerData.PRE4RATEN += 1;
+            if (completedIn < 17) {
+                player.playerData.PRE4RATE += 1;
+            }
+            player.save();
+        }
     }
 }).setFilteredClass(S02PacketChat);
 
