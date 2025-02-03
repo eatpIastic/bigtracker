@@ -199,6 +199,7 @@ register("packetReceived", (packet, event) => {
             campStart = Date.now();
             let brTime = Date.now() - runStart;
             brTime /= 1000;
+            console.log(`brTime: ${brTime}`);
 
             if (brTime > 45) {
                 brTime = 45;
@@ -265,7 +266,7 @@ register("packetReceived", (packet, event) => {
             }
         }
     }
-    else if (text == "[NPC] Mort: Here, I found this map when I first entered the dungeon") {
+    else if (text == "[NPC] Mort: Here, I found this map when I first entered the dungeon.") {
         runStart = Date.now();
         getPartyMembers();
     }
