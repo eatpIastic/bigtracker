@@ -164,7 +164,7 @@ register("packetReceived", (packet, event) => {
             player.check(data.autoKick, data.sayReason);
         }
     }
-    else if (text === "[BOSS] Goldor: Who dares trespass into my domain?") {
+    else if (text == "[BOSS] Goldor: Who dares trespass into my domain?") {
         termsStart = Date.now();
         getPartyMembers();
     }
@@ -221,7 +221,7 @@ register("packetReceived", (packet, event) => {
             }
         }
 
-        if (text === "[BOSS] The Watcher: You have proven yourself. You may pass.") {
+        if (text == "[BOSS] The Watcher: You have proven yourself. You may pass.") {
             let campTime = Date.now() - campStart;
             campTime /= 1000;
 
@@ -245,7 +245,7 @@ register("packetReceived", (packet, event) => {
             }
         }
     }
-    else if (text === "The Core entrance is opening!") {
+    else if (text == "The Core entrance is opening!") {
         getPartyMembers();
         let termsTime = Date.now() - termsStart;
         termsTime /= 1000;
@@ -265,7 +265,7 @@ register("packetReceived", (packet, event) => {
             }
         }
     }
-    else if (text === "[NPC] Mort: Here, I found this map when I first entered the dungeon") {
+    else if (text == "[NPC] Mort: Here, I found this map when I first entered the dungeon") {
         runStart = Date.now();
         getPartyMembers();
     }
@@ -279,17 +279,17 @@ register("packetReceived", (packet, event) => {
             completedIn = 17;
         }
 
-        if (!ssDone && partyMembers[name] === "Healer") {
+        if (!ssDone && partyMembers[name] == "Healer") {
             if (completedIn != 17) ChatLib.chat(`SS Completed in ${completedIn}`);
             ssDone = true;
             if (!player) {
-                executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGSS", "AVGSSN", completedIn]);
+                executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGSSTIME", "AVGSSTIMEN", completedIn]);
             } else {
-                player.updateMovingAVG("AVGSS", "AVGSSN", completedIn);
+                player.updateMovingAVG("AVGSSTIME", "AVGSSTIMEN", completedIn);
             }
         }
 
-        if (!pre4Done && partyMembers[name] === "Berserk") {
+        if (!pre4Done && partyMembers[name] == "Berserk") {
             if (completedIn != 17) ChatLib.chat(`Pre4 Completed in ${completedIn}`);
             pre4Done = true;
             if (!player) {
@@ -391,7 +391,7 @@ const printAll = () => {
     let fileNames = new File("./config/ChatTriggers/modules/bigtracker/players").list();
     for (let i = 0; i < fileNames.length; i++) {
         let player = new PlayerObject(fileNames[i].replace(".json", ""));
-        if (!player.playerData.DODGE && player.playerData.NOTE === "") continue;
+        if (!player.playerData.DODGE && player.playerData.NOTE == "") continue;
         let playerString = `${player.playerData.USERNAME}:`
         if (player.playerData.NOTE !== "") {
             playerString += ` ${player.playerData.NOTE}`;
