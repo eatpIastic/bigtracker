@@ -6,7 +6,7 @@ export default class PlayerObject {
                 ssPB=17, termsPB=80, runPB=1000, campPB=100) {
         this.playerData = new PogObject("bigtracker/players", {
             UUID: UUID,
-            USERNAME: username,
+            USERNAME: username?.toLowerCase(),
             NOTE: note,
             DODGE: dodge,
             DODGELENGTH: dodgeLength,
@@ -42,8 +42,53 @@ export default class PlayerObject {
 
     printPlayer() {
         ChatLib.chat(`${this.playerData.USERNAME}`);
-        ChatLib.chat(`${this.playerData.NOTE}`)
-        ChatLib.chat("TODO: ALL THIS SHIT");
+
+        if (this.playerData.NOTE !== "") ChatLib.chat(`${this.playerData.NOTE}`);
+
+        if (this.playerData.DODGE) {
+            let playerString = ""
+            if (this.playerData.DODGELENGTH !== 0) {
+                let timeLeft = Date.now() - this.playerData.DODGEDATE;
+                timeLeft /= 1000; // seconds
+                timeLeft /= 60; // minutes
+                timeLeft /= 60; // hours
+                timeLeft /= 24; // days
+                timeLeft = parseFloat( (this.playerData.DODGELENGTH - timeLeft).toFixed(1) );
+                playerString += `dodged; ${timeLeft} days remaining`;
+            } else {
+                playerString += `dodged`;
+            }
+            ChatLib.chat(playerString);
+        }
+
+        if (this.playerData.NUMRUNS !== 0) {
+            ChatLib.chat(`runs w/: ${this.playerData.NUMRUNS}`);
+            ChatLib.chat(`avg deaths: ${(this.playerData.DEATHS / this.playerData.NUMRUNS).toFixed(1)}`);
+            ChatLib.chat(`last run: ${(((Date.now() - this.playerData.LASTSESSION) / 1000) / 60 / 60 / 24).toFixed(1)} days ago`);
+            ChatLib.chat(`avg runtime: ${Math.trunc(this.playerData.AVGRUNTIME / 60)}m ${(this.playerData.AVGRUNTIME % 60).toFixed(1)}s`);
+        } else {
+            ChatLib.chat("no runs");
+        }
+
+        if (this.playerData.AVGSSTIMEN !== 0) {
+            ChatLib.chat(`avg ss: ${this.playerData.AVGSSTIME}`);
+        }
+
+        if (this.playerData.PRE4RATEN !== 0) {
+            ChatLib.chat(`pre4 rate: ${this.playerData.PRE4RATE}/${this.playerData.PRE4RATEN} (${((this.playerData.PRE4RATE / this.playerData.PRE4RATEN) * 100).toFixed(1)}%)`);
+        }
+
+        if (this.playerData.AVGBRN !== 0) {
+            ChatLib.chat(`avg br: ${this.playerData.AVGBR}`);
+        }
+
+        if (this.playerData.AVGCAMPN !== 0) {
+            ChatLib.chat(`avg camp: ${this.playerData.AVGCAMP}`);
+        }
+
+        if (this.playerData.AVGTERMSN !== 0) {
+            ChatLib.chat(`avg terms: ${this.playerData.AVGTERMS}`);
+        }
     }
 
     updateMovingAVG(TYPE, TYPEN, TIME, INCREMENT=true) {
@@ -76,6 +121,7 @@ export default class PlayerObject {
 
     check(autokick=false, sayReason=false) {
         if(this.playerData.DODGE) {
+            World.playSound("mob.horse.donkey.idle", 1, 1)
             let dodgeStr = "";
             // ChatLib.chat(`${this.playerData.USERNAME} is dodged.`);
             
@@ -118,14 +164,3 @@ export default class PlayerObject {
         }
     }
 }
-
-
-// let dodgeStr = "";
-// if (data.playerData[UUID]["dodge"]) {
-    // if (data.playerData[UUID]["dodgeLength"] !== 0) {
-        // dodgeStr = ` : (dodged for ${data.playerData[UUID]["dodgeLength"]} days)`;
-    // } else {
-        // dodgeStr = " : (dodged)";
-    // }
-// }
-// ChatLib.chat(`${data.playerData[UUID]["lastKnown"]}: ${data.playerData[UUID]["note"]}${dodgeStr}`);
