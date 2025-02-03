@@ -184,7 +184,7 @@ register("packetReceived", (packet, event) => {
         }
     }
     else if (text.match(/☠(.+)/) && Dungeon.inDungeon && !(text.includes(" Defeated ") || text.includes("reconnected.") || text.includes(" disconnected "))) {
-        let name = msg.split(" ")[2].toLowerCase();
+        let name = text.split(" ")[2].toLowerCase();
         let player = getPlayerDataByName(name);
 
         if (!player) {
