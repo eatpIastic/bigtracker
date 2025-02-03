@@ -3,6 +3,7 @@
 import PogObject from "../PogData";
 import PlayerObject from "./PlayerObject";
 import Dungeon from "../BloomCore/dungeons/Dungeon";
+import request from "../requestV2";
 
 const S02PacketChat = Java.type("net.minecraft.network.play.server.S02PacketChat");
 const File = Java.type("java.io.File");
@@ -25,7 +26,7 @@ if (data.firstTime) {
             let fileData = FileLib.read("./config/ChatTriggers/modules/bigtracker/list.json");
             fileData = JSON.parse(fileData)["list"];
             for (let UUID in fileData) {
-                playerData[UUID] = new PlayerObject(UUID, fileData[UUID][0], fileData[UUID][1]);
+                playerData[UUID] = new PlayerObject(UUID, fileData[UUID][0].toLowerCase(), fileData[UUID][1]);
             }
         } catch(e) {}
     }
@@ -38,7 +39,7 @@ if (data.firstTime) {
             let oldPlayer = oldPlayerData[UUID];
             console.log(`${oldPlayer?.["lastKnown"]}`);
 
-            new PlayerObject(UUID, oldPlayer?.["lastKnown"], oldPlayer?.["note"], oldPlayer?.["dodge"], oldPlayer?.["dodgeLength"],
+            new PlayerObject(UUID, oldPlayer?.["lastKnown"]?.toLowerCase(), oldPlayer?.["note"], oldPlayer?.["dodge"], oldPlayer?.["dodgeLength"],
                 oldPlayer?.["dodgeDate"], oldPlayer?.["numRuns"], oldPlayer?.["lastSession"], oldPlayer?.["avgDeaths"], oldPlayer?.["avgSSTime"],
                 oldPlayer?.["avgSSTimeN"], oldPlayer?.["pre4Rate"], oldPlayer?.["pre4RateN"], oldPlayer?.["ee3Rate"], oldPlayer?.["ee3RateN"],
                 oldPlayer?.["avgRunTime"], oldPlayer?.["avgBR"], oldPlayer?.["avgBRN"], oldPlayer?.["avgCamp"], oldPlayer?.["avgCampN"], oldPlayer?.["avgTerms"], oldPlayer?.["avgTermsN"]
@@ -62,19 +63,23 @@ const getPlayerDataByUUID = (UUID, NAME) => {
         return playerData[UUID];
     }
 
-    playerData[UUID] = new PlayerObject(UUID, NAME);
+    playerData[UUID] = new PlayerObject(UUID, NAME.toLowerCase());
     return playerData[UUID];
 }
 
-const getPlayerDataByName = (NAME) => {
+const getPlayerDataByName = (NAME, makeRequest=true) => {
+    NAME = NAME.toLowerCase();
+
     if (namesToUUID[NAME]) {
         return getPlayerDataByUUID(namesToUUID[NAME], NAME);
     }
 
+    if (!makeRequest) return;
+
     request(`https://api.mojang.com/users/profiles/minecraft/${NAME}`)
         .then(function(res) {
             const UUID = JSON.parse(res).id;
-            NAME = JSON.parse(res).name;
+            NAME = JSON.parse(res).name?.toLowerCase();
             namesToUUID[NAME] = UUID;
             return getPlayerDataByUUID(UUID, NAME);
         }
@@ -122,7 +127,7 @@ const getPartyMembers = () => {
                 deadPlayer = true;
             }
 
-            let name = line.split(" ")?.[1];
+            let name = line.split(" ")?.[1].toLowerCase();
 
             if (!namesToUUID[name]) {
                 getPlayerDataByName(name);
@@ -146,9 +151,14 @@ register("packetReceived", (packet, event) => {
 
     if (text.match(/Party Finder > (.+) joined the dungeon group! .+/)) {
         const match = text.match(/Party Finder > (.+) joined the dungeon group! .+/);
-        const name = match[1];
+        const name = match[1].toLowerCase();
         let player = getPlayerDataByName(name);
-        player.check(data.autoKick, data.sayReason);
+
+        if (!player) {
+            executeQueue.push([name, "check", Date.now()])
+        } else {
+            player.check(data.autoKick, data.sayReason);
+        }
     }
     else if (text === "[BOSS] Goldor: Who dares trespass into my domain?") {
         termsStart = Date.now();
@@ -161,14 +171,24 @@ register("packetReceived", (packet, event) => {
 
         for (let name of Object.keys(partyMembers)) {
             let player = getPlayerDataByName(name);
-            player.updateMovingAVG("AVGRUNTIME", "NUMRUNS", time);
+
+            if (!player) {
+                executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGRUNTIME", "NUMRUNS", time])
+            } else {
+                player.updateMovingAVG("AVGRUNTIME", "NUMRUNS", time);
+            }
         }
     }
     else if (text.match(/☠(.+)/) && Dungeon.inDungeon && !(text.includes(" Defeated ") || text.includes("reconnected.") || text.includes(" disconnected "))) {
-        let name = msg.split(" ")[2];
+        let name = msg.split(" ")[2].toLowerCase();
         let player = getPlayerDataByName(name);
-        player.playerData.DEATHS += 1;
-        player.save();
+
+        if (!player) {
+            executeQueue.push([name, "DEATHS", Date.now()]);
+        } else {
+            player.playerData.DEATHS += 1;
+            player.save();
+        }
     }
     else if (text.startsWith("[BOSS] The Watcher:")) {
         if (campStart === 0) {
@@ -188,7 +208,12 @@ register("packetReceived", (packet, event) => {
                     continue;
                 }
                 let player = getPlayerDataByName(name);
-                player.updateMovingAVG("AVGBR", "AVGBRN", brTime);
+
+                if (!player) {
+                    executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGBR", "AVGBRN", brTime]);
+                } else {
+                    player.updateMovingAVG("AVGBR", "AVGBRN", brTime);
+                }
             }
         }
 
@@ -208,7 +233,11 @@ register("packetReceived", (packet, event) => {
                     continue;
                 }
                 let player = getPlayerDataByName(name);
-                player.updateMovingAVG("AVGCAMP", "AVGCAMPN", campTime);
+                if (!player) {
+                    executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGCAMP", "AVGCAMPN", campTime]);
+                } else {
+                    player.updateMovingAVG("AVGCAMP", "AVGCAMPN", campTime);
+                }
             }
         }
     }
@@ -224,7 +253,12 @@ register("packetReceived", (packet, event) => {
 
         for (let name of Object.keys(partyMembers)) {
             let player = getPlayerDataByName(name);
-            player.updateMovingAVG("AVGTERMS", "AVGTERMSN", termsTime);
+
+            if (!player) {
+                executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGTERMS", "AVGTERMSN", termsTime]);
+            } else {
+                player.updateMovingAVG("AVGTERMS", "AVGTERMSN", termsTime);
+            }
         }
     }
     else if (text === "[NPC] Mort: Here, I found this map when I first entered the dungeon") {
@@ -232,29 +266,37 @@ register("packetReceived", (packet, event) => {
         getPartyMembers();
     }
     else if (text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/)) {
-        const completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
+        let completedIn = parseFloat(((Date.now() - termsStart) / 1000).toFixed(2));
         const match = text.match(/([a-zA-Z0-9_]{3,16}) completed a device!.+/);
-        const name = match[1];
+        const name = match[1].toLowerCase();
         let player = getPlayerDataByName(name);
 
         if (completedIn > 17) {
             completedIn = 17;
         }
 
-        if (!ssDone && tempPartyMembers[username] === "Healer") {
+        if (!ssDone && tempPartyMembers[name] === "Healer") {
             if (completedIn != 17) ChatLib.chat(`SS Completed in ${completedIn}`);
             ssDone = true;
-            player.updateMovingAVG("AVGSS", "AVGSSN", completedIn);
+            if (!player) {
+                executeQueue.push([name, "updateMovingAVG", Date.now(), "AVGSS", "AVGSSN", completedIn]);
+            } else {
+                player.updateMovingAVG("AVGSS", "AVGSSN", completedIn);
+            }
         }
 
-        if (!pre4Done && tempPartyMembers[username] === "Berserk") {
+        if (!pre4Done && tempPartyMembers[name] === "Berserk") {
             if (completedIn != 17) ChatLib.chat(`Pre4 Completed in ${completedIn}`);
             pre4Done = true;
-            player.playerData.PRE4RATEN += 1;
-            if (completedIn < 17) {
-                player.playerData.PRE4RATE += 1;
+            if (!player) {
+                executeQueue.push([name, "PRE4", Date.now(), completedIn]);
+            } else {
+                player.playerData.PRE4RATEN += 1;
+                if (completedIn < 17) {
+                    player.playerData.PRE4RATE += 1;
+                }
+                player.save();
             }
-            player.save();
         }
     }
 }).setFilteredClass(S02PacketChat);
@@ -291,39 +333,120 @@ register("command", (...args) => {
                 ChatLib.chat(`/big ${args[0]} username`);
                 return;
             }
-            let player = getPlayerDataByName(args[1]);
-            player.printAll();
+            let player = getPlayerDataByName(args[1].toLowerCase());
+            if (!player) {
+                executeQueue.push([args[1].toLowerCase(), "PRINTPLAYER", Date.now()])
+            } else {
+                player.printPlayer();
+            }
             break;
         }
         case "dodge": {
-            let username = args?.[1];
+            let username = args?.[1]?.toLowerCase();
             let length = args?.[2];
             if (!username) {
                 ChatLib.chat("/big dodge name <days?>");
                 return;
             }
             let player = getPlayerDataByName(username);
-            player.dodge(length);
+            if (!player) {
+                executeQueue.push[username, "dodge", Date.now(), length];
+            } else {
+                player.dodge(length);
+            }
             break;
         }
         case "list":
         case "viewall":
         case "show":
         case "all": {
-            printAll();
+            // printAll();
             break;
         }
         default: {
+            let player = getPlayerDataByName(args[0]?.toLowerCase());
+            if (!player) {
+                executeQueue.push([args[0], "DEFAULT", Date.now(), args]);
+                return;
+            }
             if(args.length > 2) {
-                modifyNote(args[0], args?.splice(1)?.join(" "));
+                // modifyNote(args[0], args?.splice(1)?.join(" "));
+                let note = args?.splice(1)?.join(" ");
+                if (!note) note = " ";
+                player.playerData.NOTE = note;
+                player.save();
             } else {
-                let player = getPlayerDataByName(args[0]);
                 player.dodge(args?.[1]);
             }
             break;
         }
     }
 }).setName("big2");
+
+
+
+let executeQueue = [];
+register("tick", () => {
+    for (let i = 0; i < executeQueue.length; i++) {
+        if (i < 0 || i > executeQueue.length) return;
+        if (!executeQueue?.[i]?.[2]) return;
+
+        if (Date.now() - executeQueue[i][2] > 5000) {
+            console.log(`failed to get player ${executeQueue[i][0]}`);
+            delete executeQueue[i];
+            continue;
+        }
+        let player = getPlayerDataByName(executeQueue[i][0], false);
+
+        if (!player) continue;
+
+        switch (executeQueue[i][1]) {
+            case "dodge": {
+                player.dodge(executeQueue[i]?.[3]);
+                break;
+            }
+            case "check": {
+                player.check(data.autoKick, data.sayReason);
+                break;
+            }
+            case "updateMovingAVG": {
+                player.updateMovingAVG(executeQueue[i][3], executeQueue[i][4], executeQueue[i][5]);
+                break;
+            }
+            case "DEATHS": {
+                player.playerData.DEATHS += 1;
+                player.save();
+                break;
+            }
+            case "PRE4": {
+                player.playerData.PRE4RATEN += 1;
+                let completedIn = executeQueue[i][3];
+                if (completedIn < 17) {
+                    player.playerData.PRE4RATE += 1;
+                }
+                player.save();
+                break;
+            }
+            case "PRINTPLAYER": {
+                player.printPlayer();
+                break;
+            }
+            case "DEFAULT": {
+                let args = executeQueue[i][3];
+                if(args.length > 2) {
+                    let note = args?.splice(1)?.join(" ");
+                    if (!note) note = " ";
+                    player.playerData.NOTE = note;
+                    player.save();
+                } else {
+                    player.dodge(args?.[1]);
+                }
+                break;
+            }
+        }
+        delete executeQueue[i];
+    }
+});
 
 
 
