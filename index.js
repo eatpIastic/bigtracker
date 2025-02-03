@@ -171,7 +171,7 @@ register("packetReceived", (packet, event) => {
     else if (text.match(/\s+☠ Defeated Maxor, Storm, Goldor, and Necron in (\d+)m\s+(\d+)s/)) {
         getPartyMembers();
         const match = text.match(/\s+☠ Defeated Maxor, Storm, Goldor, and Necron in (\d+)m\s+(\d+)s/);
-        const time = (match[1] * 60) + match[2];
+        const time = (parseInt(match[1]) * 60) + parseInt(match[2]);
 
         for (let name of Object.keys(partyMembers)) {
             let player = getPlayerDataByName(name);
@@ -374,7 +374,6 @@ register("command", (...args) => {
                 return;
             }
             if(args.length > 2) {
-                // modifyNote(args[0], args?.splice(1)?.join(" "));
                 let note = args?.splice(1)?.join(" ");
                 if (!note) note = " ";
                 player.playerData.NOTE = note;
@@ -492,3 +491,20 @@ const commandHelp = () => {
     ChatLib.chat("/big sstimes &7<- print all players average ss times from fastest to slowest");
     ChatLib.chat("/dodge <name> <days?> &7<- shortcut for /big dodge");
 }
+
+// const getSSTimes = () => {
+//     let sortedSSTimes = [];
+//     for (let UUID in data.playerData) {
+//         if (data.playerData[UUID]["avgSSTimeN"] === 0) {
+//             continue;
+//         }
+
+//         sortedSSTimes.push([data.playerData[UUID]["lastKnown"], data.playerData[UUID]["avgSSTime"]]);
+//     }
+//     sortedSSTimes.sort((a,b) => a[1] - b[1]);
+
+//     sortedSSTimes.forEach(p => {
+//         ChatLib.chat(`${p[0]}: ${p[1]}`);
+//     });
+// }
+
