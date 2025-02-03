@@ -55,8 +55,10 @@ if (data.firstTime) {
     }
 }
 
+
 const playerData = {};
 const namesToUUID = {};
+
 
 const getPlayerDataByUUID = (UUID, NAME) => {
     if (playerData[UUID]) {
@@ -66,6 +68,7 @@ const getPlayerDataByUUID = (UUID, NAME) => {
     playerData[UUID] = new PlayerObject(UUID, NAME.toLowerCase());
     return playerData[UUID];
 }
+
 
 const getPlayerDataByName = (NAME, makeRequest=true) => {
     NAME = NAME.toLowerCase();
@@ -104,6 +107,7 @@ register("worldLoad", () => {
     ssDone = false;
     pre4Done = false;
 });
+
 
 const getPartyMembers = () => {
     if (!Dungeon.inDungeon) return;
@@ -360,7 +364,7 @@ register("command", (...args) => {
         case "viewall":
         case "show":
         case "all": {
-            // printAll();
+            printAll();
             break;
         }
         default: {
@@ -382,6 +386,33 @@ register("command", (...args) => {
         }
     }
 }).setName("big2");
+
+
+const printAll = () => {
+    let fileNames = new File("./config/ChatTriggers/modules/bigtracker/players").list();
+    for (let i = 0; i < fileNames.length; i++) {
+        let player = new PlayerObject(fileNames[i].replace(".json", ""));
+        if (!player.playerData.DODGE && player.playerData.NOTE === "") continue;
+        let playerString = `${player.playerData.USERNAME}:`
+        if (player.playerData.NOTE !== "") {
+            playerString += ` ${player.playerData.NOTE}`;
+        }
+        if (player.playerData.DODGE) {
+            if (player.playerData.DODGELENGTH !== 0) {
+                let timeLeft = Date.now() - player.playerData.DODGEDATE;
+                timeLeft /= 1000; // seconds
+                timeLeft /= 60; // minutes
+                timeLeft /= 60; // hours
+                timeLeft /= 24; // days
+                timeLeft = parseFloat( (player.playerData.DODGELENGTH - timeLeft).toFixed(1) );
+                playerString += ` (dodged; ${timeLeft} days remaining)`;
+            } else {
+                playerString += ` (dodged)`;
+            }
+        }
+        ChatLib.chat(playerString);
+    }
+}
 
 
 
