@@ -64,7 +64,7 @@ const getPlayerByName = (name, task=null, extra=null) => {
         return;
     }
 
-    fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`, { json: true })
+    fetch(`https://api.minecraftservices.com/minecraft/profile/lookup/name/${name}`, { json: true })
     .then(res => {
         // let UUID = JSON.parse(res)?.id;
         let UUID = res.id;
